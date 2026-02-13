@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - Smart Health</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard">
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>Smart Health</h2>
+    <a href="#" onclick="showSection('dashboardSection')">Dashboard</a>
+    <a href="#" onclick="showSection('addRecordSection')">Add Record</a>
+    <a href="#" onclick="showSection('historySection')">History</a>
+    <a href="#" onclick="showSection('profileSection')">Profile</a>
+    <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<!-- Main content -->
+<div class="main">
+
+    <!-- Dark/Light Mode Toggle -->
+    <button onclick="toggleTheme()" style="margin-bottom:20px;">Toggle Dark/Light Mode</button>
+
+    <h1 id="welcomeMessage"></h1>
+
+    <!-- Dashboard cards & chart -->
+    <div id="dashboardSection" class="section">
+        <div class="cards">
+            <div class="card" id="heartCard">Avg Heart Rate: 0 bpm</div>
+            <div class="card" id="bpCard">Avg Blood Pressure: 0 mmHg</div>
+            <div class="card" id="sugarCard">Avg Sugar: 0 mg/dL</div>
+        </div>
+        <canvas id="healthChart" height="200"></canvas>
+    </div>
+
+    <!-- Add Record Section -->
+    <div id="addRecordSection" class="section" style="display:none;">
+        <h2>Add Health Record</h2>
+        <form onsubmit="return addHealthRecord()">
+            <input type="number" id="heart" placeholder="Heart Rate (bpm)">
+            <input type="number" id="bp" placeholder="Blood Pressure (mmHg)">
+            <input type="number" id="sugar" placeholder="Sugar Level (mg/dL)">
+            <button type="submit">Submit</button>
+        </form>
+        <p id="error"></p>
+        <p id="result"></p>
+    </div>
+
+    <!-- History Section -->
+    <div id="historySection" class="section" style="display:none;">
+        <h2>Health Records</h2>
+        <input type="date" id="filterDate" onchange="filterRecords()">
+        <table id="recordsTable">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Heart Rate</th>
+                    <th>Blood Pressure</th>
+                    <th>Sugar Level</th>
+                    <th>Risk</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <!-- Profile Section -->
+    <div id="profileSection" class="section" style="display:none;">
+        <h2>Your Profile</h2>
+        <form onsubmit="return updateProfile()">
+            <input type="text" id="profileName" placeholder="Name" required>
+            <input type="email" id="profileEmail" placeholder="Email" required disabled>
+            <input type="number" id="profileAge" placeholder="Age" required>
+            <button type="submit">Update Profile</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+// Check login
+let isLoggedIn = localStorage.getItem("isLoggedIn");
+let name = localStorage.getItem("userName");
+if (isLoggedIn !== "true") window.location.href = "login.html";
+document.getElementById("welcomeMessage").innerText = "Welcome " + name + " 🎉";
+
+// Logout
+function logout() {
+    localStorage.removeItem("isLoggedIn");
+    window.location.href = "login.html";
+}
+
+// Show section
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    
+    if(sectionId === 'profileSection') {
+        document.getElementById("profileName").value = localStorage.getItem("userName") || "";
+        document.getElementById("profileEmail").value = localStorage.getItem("userEmail") || "";
+        document.getElementById("profileAge").value = localStorage.getItem("userAge") || "";
+    }
+}
+
+// Dark/Light Mode
+function toggleTheme() {
+    document.body.classList.toggle("dark-mode");
+}
+
+// Add Health Record
+function addHealthRecord() {
+    let heartRate = document.getElementById("heart").value;
+    let bp = document.getElementById("bp").value;
+    let sugar = document.getElementById("sugar").value;
+    let error = document.getElementById("error");
+    let result = document.getElementById("result");
+
+    if (!heartRate || !bp || !sugar) {
+        error.innerText = "Please fill all fields!";
+        result.innerText = "";
+        return false;
+    }
+
+    error.innerText = "";
+    let risk = "";
+    if (sugar > 180 || heartRate > 110) risk = "High Risk 🚨";
+    else if (sugar > 140) risk = "Medium Risk ⚠️";
+    else risk = "Low Risk ✅";
+
+    result.innerHTML = "Health Status: <span style='color:" + 
+        (risk.includes("High") ? "red" : risk.includes("Medium") ? "orange" : "green") + "'>" + risk + "</span>";
+
+    let records = JSON.parse(localStorage.getItem("healthRecords") || "[]");
+    records.push({ heartRate, bp, sugar, risk, date: new Date().toLocaleString() });
+    localStorage.setItem("healthRecords", JSON.stringify(records));
+
+    document.getElementById("heart").value = "";
+    document.getElementById("bp").value = "";
+    document.getElementById("sugar").value = "";
+
+    displayRecords();
+    updateCards();
+    updateChart();
+    return false;
+}
+
+// Display records
+function displayRecords() {
+    let records = JSON.parse(localStorage.getItem("healthRecords") || "[]");
+    let tableBody = document.getElementById("recordsTable").getElementsByTagName("tbody")[0];
+    tableBody.innerHTML = "";
+    records.forEach((r, i) => {
+        let row = tableBody.insertRow();
+        row.insertCell(0).innerText = r.date;
+        row.insertCell(1).innerText = r.heartRate;
+        row.insertCell(2).innerText = r.bp;
+        row.insertCell(3).innerText = r.sugar;
+        row.insertCell(4).innerHTML = `<span class="${r.risk.includes('High')?'high': r.risk.includes('Medium')?'medium':'low'}">${r.risk}</span>`;
+        row.insertCell(5).innerHTML = `<button onclick="editRecord(${i})">Edit</button> <button onclick="deleteRecord(${i})">Delete</button>`;
+    });
+}
+
+// Update cards with averages
+function updateCards() {
+    let records = JSON.parse(localStorage.getItem("healthRecords") || "[]");
+    if(records.length === 0) return;
+
+    let sumHeart = 0, sumBP = 0, sumSugar = 0;
+    records.forEach(r => { sumHeart += parseFloat(r.heartRate); sumBP += parseFloat(r.bp); sumSugar += parseFloat(r.sugar); });
+
+    let avgHeart = (sumHeart / records.length).toFixed(1);
+    let avgBP = (sumBP / records.length).toFixed(1);
+    let avgSugar = (sumSugar / records.length).toFixed(1);
+
+    document.getElementById("heartCard").innerText = "Avg Heart Rate: " + avgHeart + " bpm";
+    document.getElementById("bpCard").innerText = "Avg Blood Pressure: " + avgBP + " mmHg";
+    document.getElementById("sugarCard").innerText = "Avg Sugar: " + avgSugar + " mg/dL";
+}
+
+// Update chart with trend and color-coded risk
+let healthChart;
+function updateChart() {
+    let records = JSON.parse(localStorage.getItem("healthRecords") || "[]");
+    let labels = records.map(r => r.date);
+    let heartData = records.map(r => r.heartRate);
+    let bpData = records.map(r => r.bp);
+    let sugarData = records.map(r => r.sugar);
+
+    if(healthChart) healthChart.destroy();
+
+    const ctx = document.getElementById('healthChart').getContext('2d');
+    healthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Heart Rate',
+                    data: heartData,
+                    borderColor: 'red',
+                    backgroundColor: 'rgba(255,0,0,0.1)',
+                    pointBackgroundColor: heartData.map(h => h > 110 ? 'red' : 'green')
+                },
+                {
+                    label: 'Blood Pressure',
+                    data: bpData,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0,0,255,0.1)',
+                    pointBackgroundColor: bpData.map(b => b > 140 ? 'orange' : 'green')
+                },
+                {
+                    label: 'Sugar Level',
+                    data: sugarData,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0,255,0,0.1)',
+                    pointBackgroundColor: sugarData.map(s => s > 180 ? 'red' : s > 140 ? 'orange' : 'green')
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Health Trends Over Time',
+                    font: { size: 20 }
+                },
+                legend: { display: true, position: 'top' }
+            },
+            scales: { y: { beginAtZero: false } }
+        }
+    });
+}
+
+// Profile update
+function updateProfile() {
+    let name = document.getElementById("profileName").value;
+    let age = document.getElementById("profileAge").value;
+    let email = localStorage.getItem("userEmail");
+
+    localStorage.setItem("userName", name);
+    localStorage.setItem("userAge", age);
+
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+    let user = users.find(u => u.email === email);
+    if(user){
+        user.name = name;
+        user.age = age;
+        localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    document.getElementById("welcomeMessage").innerText = "Welcome " + name + " 🎉";
+    alert("Profile updated successfully! 🎉");
+    return false;
+}
+
+// Initialize
+displayRecords(); 
+updateCards(); 
+updateChart();
+</script>
+
+</body>
+</html>

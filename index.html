@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - Smart Health</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Smart Health Monitoring System</h1>
+    <h2>Register</h2>
+    <form onsubmit="return registerUser()">
+        <input type="text" id="name" placeholder="Name">
+        <input type="email" id="email" placeholder="Email">
+        <input type="number" id="age" placeholder="Age">
+        <input type="password" id="password" placeholder="Password">
+        <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+
+<script>
+function registerUser() {
+    let name = document.getElementById("name").value;
+    let email = document.getElementById("email").value;
+    let age = document.getElementById("age").value;
+    let password = document.getElementById("password").value;
+    if(!name || !email || !age || !password){
+        alert("Please fill all fields!");
+        return false;
+    }
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+    users.push({name,email,age,password});
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Registration successful!");
+    window.location.href="login.html";
+    return false;
+}
+</script>
+</body>
+</html>

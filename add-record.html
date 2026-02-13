@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Health Record</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Smart Health Monitoring System</h1>
+    <h2>Add Health Record</h2>
+
+    <form onsubmit="return addHealthRecord()">
+        <input type="number" id="heart" placeholder="Heart Rate (bpm)">
+        <input type="number" id="bp" placeholder="Blood Pressure (mmHg)">
+        <input type="number" id="sugar" placeholder="Sugar Level (mg/dL)">
+        <button type="submit">Submit</button>
+    </form>
+
+    <p id="error"></p>
+    <p id="result"></p>
+    <br>
+    <a href="dashboard.html">Back to Dashboard</a>
+
+<script>
+if(localStorage.getItem("isLoggedIn") !== "true") window.location.href = "login.html";
+
+function addHealthRecord() {
+    var heartRate = document.getElementById("heart").value;
+    var bp = document.getElementById("bp").value;
+    var sugar = document.getElementById("sugar").value;
+    var error = document.getElementById("error");
+    var result = document.getElementById("result");
+
+    if (!heartRate || !bp || !sugar) {
+        error.innerText = "Please fill all fields!";
+        result.innerText = "";
+        return false;
+    }
+
+    error.innerText = "";
+    var risk = "";
+
+    if (sugar > 180 || heartRate > 110) risk = "High Risk 🚨";
+    else if (sugar > 140) risk = "Medium Risk ⚠️";
+    else risk = "Low Risk ✅";
+
+    result.innerHTML = "Health Status: <span style='color:" + 
+        (risk.includes("High") ? "red" : risk.includes("Medium") ? "orange" : "green") + "'>" + risk + "</span>";
+
+    var records = JSON.parse(localStorage.getItem("healthRecords") || "[]");
+    records.push({
+        heartRate: heartRate,
+        bp: bp,
+        sugar: sugar,
+        risk: risk,
+        date: new Date().toLocaleString()
+    });
+    localStorage.setItem("healthRecords", JSON.stringify(records));
+
+    document.getElementById("heart").value = "";
+    document.getElementById("bp").value = "";
+    document.getElementById("sugar").value = "";
+
+    return false;
+}
+</script>
+</body>
+</html>

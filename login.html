@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Smart Health</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Smart Health Monitoring System</h1>
+    <h2>Login</h2>
+    <form onsubmit="return loginUser()">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button type="submit">Login</button>
+    </form>
+    <p>Don't have an account? <a href="index.html">Register here</a></p>
+
+<script>
+function loginUser() {
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+    let user = users.find(u => u.email===email && u.password===password);
+    if(user){
+        localStorage.setItem("isLoggedIn","true");
+        localStorage.setItem("userName",user.name);
+        window.location.href="dashboard.html";
+    } else {
+        alert("Invalid credentials!");
+    }
+    return false;
+}
+</script>
+</body>
+</html>
