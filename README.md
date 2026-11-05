@@ -1,33 +1,20 @@
 # Smart Health Tracking System
 
-The Smart Health Tracking System is a web-based application designed to help users monitor and manage basic health-related information through a simple and user-friendly interface.
+A personal health-measurement tracking project. The original project is preserved, and an expanded full-stack implementation is available in the `health-platform/` directory.
 
-## Project Overview
-The purpose of this project is to demonstrate how digital systems can assist users in tracking health-related information and promoting better health awareness.
+## Featured project: PulseView
+- **API:** Node.js, Express and MongoDB/Mongoose
+- **Dashboard:** responsive HTML, CSS and JavaScript
+- **Device integration:** ESP32 HTTP integration template
+- **Features implemented:** manual measurement entry, history, deletion, schema/request validation, API rate limiting, Helmet security headers and restricted CORS.
 
-## Features
-- Interactive and user-friendly interface
-- Health data tracking functionality
-- Organized health information display
-- Responsive web design
+See [health-platform/README.md](health-platform/README.md) for installation, API documentation and hardware setup.
 
-## Technologies Used
-- HTML
-- CSS
-- JavaScript
+## Original project
+The initial Smart Health Tracking System files and project history are retained in their original locations.
 
-## System Workflow
-1. User accesses the web application
-2. Health information is entered or viewed
-3. Data is organized and displayed in an easy-to-understand format
-4. Users can monitor health-related details efficiently
+## Author
+Rupsa Maji · [GitHub](https://github.com/Rupsamaji)
 
-## Applications
-- Personal health monitoring
-- Digital health record tracking
-- Health awareness systems
-
-## Future Improvements
-- Integration with wearable health devices
-- Real-time health analytics
-- Cloud-based data storage
+## Safety and implementation status
+This is an educational software demo, not a medical device. It does not diagnose or predict medical conditions. ESP32 sensor functions currently contain demo placeholders and require real sensor drivers and hardware testing. Authentication and patient-data privacy controls are not implemented; do not enter identifiable patient data.
