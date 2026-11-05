@@ -1,0 +1,23 @@
+name: PulseView CI
+on:
+  push:
+    paths:
+      - "health-platform/**"
+      - ".github/workflows/pulseview-ci.yml"
+  pull_request:
+    paths:
+      - "health-platform/**"
+      - ".github/workflows/pulseview-ci.yml"
+jobs:
+  node-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node --check health-platform/api/src/server.js
+      - run: node --check health-platform/api/src/app.js
+      - run: node --check health-platform/api/src/models/Measurement.js
+      - run: node --check health-platform/api/src/routes/measurements.js
+      - run: node --check health-platform/dashboard/app.js
